@@ -305,7 +305,16 @@ function shoot(){if(!active||$('shop').style.display==='grid'||(!document.pointe
 function damageTarget(t,d,point){if(!t.userData.alive||t.userData.falling)return;t.userData.hp-=d;t.userData.hitFlash=.12;if(point)burst(point,0xff493d,10);$('hitmarker').classList.add('show');hitmarkerTimer=.12;if(t.userData.hp<=0){t.userData.alive=false;t.userData.falling=true;t.userData.fallTime=0;t.userData.fallDir=(Math.random()>.5?1:-1);scoreA++;cash+=300;updateHud();toast('Target down +$300')}else toast('HIT')}
 function tickTargets(dt){for(const t of targets){const u=t.userData;
  if(u.falling){u.fallTime+=dt;t.rotation.z=THREE.MathUtils.lerp(t.rotation.z,u.fallDir*1.48,Math.min(1,dt*5));t.position.y=Math.max(-.1,t.position.y-dt*1.3);if(u.fallTime>2.4){t.rotation.set(0,0,0);t.position.set(u.spawnX,0,u.spawnZ);u.hp=100;u.alive=true;u.falling=false;u.fallTime=0;u.legL.rotation.z=0;u.legR.rotation.z=0}continue}
- if(u.alive){u.phase+=dt*3.2;t.position.x=u.baseX+Math.sin(u.phase*.42)*u.patrol;t.rotation.y=Math.sin(u.phase*.42)*.4;u.legL.rotation.x=Math.sin(u.phase)*.48;u.legR.rotation.x=-Math.sin(u.phase)*.48;u.armL.rotation.x=Math.sin(u.phase)*.12;u.armR.rotation.x=-.12}
+ if(u.alive){
+  u.phase+=dt*3.2;t.position.x=u.baseX+Math.sin(u.phase*.42)*u.patrol;t.rotation.y=Math.atan2(camera.position.x-t.position.x,camera.position.z-t.position.z);u.legL.rotation.x=Math.sin(u.phase)*.48;u.legR.rotation.x=-Math.sin(u.phase)*.48;u.armL.rotation.x=Math.sin(u.phase)*.12;u.armR.rotation.x=-.12;
+  // Opponents return fire at close range with clear, non-graphic tracer feedback.
+  if(active){const dx=camera.position.x-t.position.x,dz=camera.position.z-t.position.z,dist=Math.hypot(dx,dz);u.attackCooldown=(u.attackCooldown||(.8+Math.random()*1.4))-dt;
+   if(dist<20&&u.attackCooldown<=0){u.attackCooldown=1.15+Math.random()*1.25;const from=new THREE.Vector3(t.position.x,t.position.y+1.25,t.position.z);const to=camera.position.clone();addTracer(from,to,0xff6b55);
+    if(Math.random()<THREE.MathUtils.clamp(.48-dist*.012,.18,.42)){health=Math.max(0,health-8);$('health').textContent=health;$('damageFlash').style.opacity='.85';setTimeout(()=>$('damageFlash').style.opacity='0',115);
+     if(health<=0){health=100;scoreB++;player.pos.set(0,1.7,12);velocityY=0;player.onGround=true;$('health').textContent=health;updateHud();toast('You were tagged — respawned')} }
+   }
+  }
+ }
  }}
 const weaponModel=new THREE.Group();camera.add(weaponModel);
 let muzzleFlash=null,muzzleUntil=0;
