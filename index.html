@@ -160,6 +160,36 @@ button,.touchBtn{-webkit-tap-highlight-color:transparent;touch-action:none}
 </div>
 <div id="menu"><div class="menuCard"><div class="kicker">TACTICAL FPS · WEB PROTOTYPE</div><div class="title">STANDON<span>1</span></div><p class="desc">Enter the training arena. Test first-person movement, aiming, shooting, jumping, weapon selection and the responsive PC / tablet controls.</p><div class="actions"><button class="primary" id="play">ENTER ARENA</button><button id="menuShop">WEAPON SHOP</button></div><div class="note">PROTOTYPE BUILD 0.1 · Local training only. Online matchmaking and server-authoritative combat are not connected yet.</div></div></div>
 <div id="shop"><div class="shopCard"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px"><div><div class="kicker">LOADOUT</div><h2 style="margin:5px 0">Weapon shop</h2><div class="small">Match cash: <span id="shopCash">$3,000</span></div></div><button id="shopClose">CLOSE ✕</button></div><div class="shopGrid" id="shopGrid"></div><p class="note">Purchases in this prototype are local and reset when the page reloads. Server validation will be added with multiplayer.</p></div></div>
+<script>
+/* Standon2 safety fallback: keep the menu responsive if the 3D module fails to initialize. */
+window.__standonReady = false;
+window.addEventListener('error', function (event) {
+  var box = document.getElementById('bootError');
+  if (box) { box.style.display = 'block'; box.textContent = 'Game script error: ' + (event.message || 'unknown error') + '. Reload the page and try again.'; }
+});
+document.addEventListener('click', function (event) {
+  if (window.__standonReady) return;
+  var id = event.target && event.target.closest ? event.target.closest('button')?.id : '';
+  if (id === 'play') {
+    document.getElementById('menu').style.display = 'none';
+    document.getElementById('hud').style.display = 'block';
+    var box = document.getElementById('bootError');
+    if (box) { box.style.display = 'block'; box.textContent = 'The menu responded, but the 3D game did not finish loading. Check the message above or reload the page.'; }
+  } else if (id === 'menuShop' || id === 'shopOpen') {
+    document.getElementById('menu').style.display = id === 'menuShop' ? 'none' : document.getElementById('menu').style.display;
+    document.getElementById('hud').style.display = 'block';
+    var shop = document.getElementById('shop');
+    shop.style.display = 'grid';
+    var grid = document.getElementById('shopGrid');
+    if (grid && !grid.children.length) {
+      grid.innerHTML = '<div class="panel shopItem"><b>Shop konnte nicht geladen werden</b><small>Das Spielskript ist nicht vollständig gestartet.</small><button onclick="location.reload()">NEU LADEN</button></div>';
+    }
+  } else if (id === 'shopClose') {
+    document.getElementById('shop').style.display = 'none';
+  }
+}, true);
+</script>
+<div id="bootError" style="display:none;position:fixed;z-index:100;left:12px;right:12px;top:12px;padding:12px;border:1px solid #ff6b58;border-radius:10px;background:#241214;color:#fff;font:600 13px system-ui;pointer-events:none"></div>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js"}}</script>
 <script type="module">
 import * as THREE from 'three';
@@ -385,7 +415,7 @@ const holdFire=$('fire');let fireHoldTimer=null,scopeFromFire=false;holdFire.add
 renderer.domElement.addEventListener('pointerdown',e=>{if(active&&e.button===2&&currentWeapon.slot==='Sniper'){e.preventDefault();setAiming(true)}else if(active&&e.button===0&&document.pointerLockElement===renderer.domElement){fireHeld=true;shoot()}});document.addEventListener('pointerup',e=>{if(e.button===2&&aiming)setAiming(false)});renderer.domElement.addEventListener('contextmenu',e=>e.preventDefault());document.addEventListener('pointerup',e=>{if(e.button===0)fireHeld=false});document.addEventListener('pointercancel',()=>fireHeld=false);document.addEventListener('keydown',e=>{if(e.code==='Escape')fireHeld=false;if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&currentWeapon.slot==='Sniper')setAiming(true)});document.addEventListener('keyup',e=>{if((e.code==='ShiftLeft'||e.code==='ShiftRight')&&aiming)setAiming(false)});
 function animate(){requestAnimationFrame(animate);const dt=Math.min(clock.getDelta(),.04);move(dt);if(fireHeld&&currentWeapon.slot!=='Sniper')shoot();tickTargets(dt);tickEffects(dt);const now=performance.now();weaponModel.position.z=now<muzzleUntil?-.09:0;renderer.render(scene,camera)}animate();
 addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight)});
-updateHud();
+updateHud();window.__standonReady=true;
 </script>
 </body>
 </html>
