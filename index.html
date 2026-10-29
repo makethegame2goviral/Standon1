@@ -189,8 +189,8 @@ function makeSurfaceMap(base,accent,mode='stone'){
  }
  const tex=new THREE.CanvasTexture(canvas);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return tex;
 }
-floorMat.map=makeSurfaceMap('#303d40','#566367','stone');floorMat.map.repeat.set(14,14);floorMat.needsUpdate=true;
 const floorMat=mat(0x303d40),wallMat=mat(0x28343d),concrete=mat(0x68747a),dark=mat(0x171f28),accent=mat(0xc7ff43),targetMat=mat(0xc3cbd0),floorPaint=mat(0x87939a,.65);
+floorMat.map=makeSurfaceMap('#303d40','#566367','stone');floorMat.map.repeat.set(14,14);floorMat.needsUpdate=true;
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
 const colliders=[];
 function block(x,y,z,sx,sy,sz,material){const o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);if(sy>.2)colliders.push({minX:x-sx/2,maxX:x+sx/2,minZ:z-sz/2,maxZ:z+sz/2});return o}
