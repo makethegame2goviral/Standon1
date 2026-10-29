@@ -263,7 +263,8 @@ function buildWeaponModel(name){
  muzzleFlash=part(weaponModel,new THREE.ConeGeometry(.1,.3,8),new THREE.MeshBasicMaterial({color:0xffd078}),[.34,-.25,flashZ],[-Math.PI/2,0,0]);muzzleFlash.visible=false;
  weaponModel.visible=active&&name!=='Knife';
 }
-buildWeaponModel(weapon);\nfunction flashMuzzle(){muzzleUntil=performance.now()+70;if(muzzleFlash){muzzleFlash.visible=true;setTimeout(()=>{if(muzzleFlash)muzzleFlash.visible=false},65)}}
+buildWeaponModel(weapon);
+function flashMuzzle(){muzzleUntil=performance.now()+70;if(muzzleFlash){muzzleFlash.visible=true;setTimeout(()=>{if(muzzleFlash)muzzleFlash.visible=false},65)}}
 function collidesAt(x,z){const r=.42;return colliders.some(b=>x+r>b.minX&&x-r<b.maxX&&z+r>b.minZ&&z-r<b.maxZ)}
 function move(dt){if(!active)return;const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const dir=new THREE.Vector3();if(keys.KeyW||keys.ArrowUp)dir.add(forward);if(keys.KeyS||keys.ArrowDown)dir.sub(forward);if(keys.KeyD||keys.ArrowRight)dir.add(right);if(keys.KeyA||keys.ArrowLeft)dir.sub(right);dir.addScaledVector(forward,-touchY);dir.addScaledVector(right,touchX);if(dir.lengthSq()>1)dir.normalize();const dx=dir.x*dt*5.4,dz=dir.z*dt*5.4;const nx=THREE.MathUtils.clamp(player.pos.x+dx,-28,28);if(!collidesAt(nx,player.pos.z))player.pos.x=nx;const nz=THREE.MathUtils.clamp(player.pos.z+dz,-23,23);if(!collidesAt(player.pos.x,nz))player.pos.z=nz;velocityY-=19*dt;player.pos.y+=velocityY*dt;if(player.pos.y<1.7){player.pos.y=1.7;velocityY=0;player.onGround=true}camera.position.copy(player.pos);camera.position.y=crouching?1.18:1.7;camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;camera.fov=aiming?48:76;camera.updateProjectionMatrix();weaponModel.visible=true;}
 let touchX=0,touchY=0,stickPointer=null,lookPointer=null,lastLookX=0,lastLookY=0;
