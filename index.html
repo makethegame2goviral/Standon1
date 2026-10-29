@@ -74,8 +74,8 @@
 #fire{width:84px;height:84px;right:25px;bottom:44px;font-size:0;background:rgba(190,194,190,.23);border-color:#ffffff45}
 #fire:before{content:"";width:28px;height:28px;border:4px solid #e2e4e2;border-radius:50%;box-shadow:0 1px 4px #000}
 #fire:after{content:"";position:absolute;width:5px;height:22px;background:#e2e4e2;border-radius:3px;top:13px;left:calc(50% - 2.5px);transform:rotate(35deg)}
-#jump{right:105px;bottom:36px;font-size:27px}
-#crouch{right:105px;bottom:101px;font-size:25px}
+#jump{right:105px;bottom:36px;font-size:11px;letter-spacing:.5px;background:#baff4850;border-color:#d7ff86}
+#crouch{right:105px;bottom:101px;font-size:10px;letter-spacing:.2px;background:#0b121bd9}
 #reload{right:31px;bottom:139px;font-size:25px}
 #switch{right:171px;bottom:50px;font-size:25px}
 #aim{right:171px;bottom:117px;font-size:24px}
@@ -91,8 +91,8 @@
  #stickBase{left:18px;bottom:25px;width:116px;height:116px}
  #stickKnob{left:33px;top:33px;width:50px;height:50px}
  #fire{right:20px;bottom:40px;width:78px;height:78px}
- #jump{right:101px;bottom:31px;width:56px;height:56px}
- #crouch{right:101px;bottom:94px;width:51px;height:51px}
+ #jump{right:101px;bottom:31px;width:60px;height:60px}
+ #crouch{right:101px;bottom:98px;width:56px;height:56px}
  #reload{right:25px;bottom:128px;width:46px;height:46px}
  #switch{right:158px;bottom:42px;width:53px;height:53px}
  #aim{right:158px;bottom:104px;width:49px;height:49px}
@@ -156,7 +156,7 @@ button,.touchBtn{-webkit-tap-highlight-color:transparent;touch-action:none}
   <div id="minimap"><div id="mapDot"></div></div><div id="scopeOverlay"></div><div id="scopeV"></div><div id="crosshair"></div><div id="hitmarker">×</div><div id="hint">WASD MOVE · MOUSE LOOK · CLICK SHOOT · R RELOAD · SPACE JUMP · B SHOP · ESC RELEASE</div>
   <div id="toast"></div>
   <div id="bottom"><div class="panel"><div class="small">Equipped</div><div class="weaponName" id="weaponName">GLOCK</div><div class="ammo" id="ammo">20 / 20</div></div><div class="panel"><div class="small">Health</div><div class="weaponName" id="health">100</div></div></div>
-  <div id="touch"><div id="stickBase"><div id="stickKnob"></div></div><div id="mobileLook"></div><div class="touchBtn" id="fire" aria-label="Fire">FIRE</div><div class="touchBtn" id="jump" aria-label="Jump">↗</div><div class="touchBtn" id="crouch" aria-label="Crouch">⌄</div><div class="touchBtn" id="reload" aria-label="Reload">↻</div><div class="touchBtn" id="switch" aria-label="Switch weapon">▰</div><div class="touchBtn" id="aim" aria-label="Aim">⊙</div></div>
+  <div id="touch"><div id="stickBase"><div id="stickKnob"></div></div><div id="mobileLook"></div><div class="touchBtn" id="fire" aria-label="Fire">FIRE</div><div class="touchBtn" id="jump" aria-label="Jump">JUMP</div><div class="touchBtn" id="crouch" aria-label="Crouch">CROUCH</div><div class="touchBtn" id="reload" aria-label="Reload">↻</div><div class="touchBtn" id="switch" aria-label="Switch weapon">▰</div><div class="touchBtn" id="aim" aria-label="Aim">⊙</div></div>
 </div>
 <div id="menu"><div class="menuCard"><div class="kicker">TACTICAL FPS · WEB PROTOTYPE</div><div class="title">STANDON<span>2</span></div><p class="desc">Enter the training arena. Test first-person movement, aiming, shooting, jumping, weapon selection and the responsive PC / tablet controls.</p><div class="actions"><button class="primary" id="play">ENTER ARENA</button><button id="menuShop">WEAPON SHOP</button></div><div class="note">PROTOTYPE BUILD 0.1 · Local training only. Online matchmaking and server-authoritative combat are not connected yet.</div></div></div>
 <div id="shop"><div class="shopCard"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px"><div><div class="kicker">LOADOUT</div><h2 style="margin:5px 0">Weapon shop</h2><div class="small">Match cash: <span id="shopCash">$3,000</span></div></div><button id="shopClose">CLOSE ✕</button></div><div class="shopGrid" id="shopGrid"></div><p class="note">Purchases in this prototype are local and reset when the page reloads. Server validation will be added with multiplayer.</p></div></div>
@@ -223,7 +223,7 @@ const floorMat=mat(0x303d40),wallMat=mat(0x28343d),concrete=mat(0x68747a),dark=m
 floorMat.map=makeSurfaceMap('#303d40','#566367','stone');floorMat.map.repeat.set(14,14);floorMat.needsUpdate=true;
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
 const colliders=[];
-function block(x,y,z,sx,sy,sz,material){const o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);if(sy>.2)colliders.push({minX:x-sx/2,maxX:x+sx/2,minZ:z-sz/2,maxZ:z+sz/2});return o}
+function block(x,y,z,sx,sy,sz,material,collidable=true){const o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);if(sy>.2&&collidable)colliders.push({minX:x-sx/2,maxX:x+sx/2,minZ:z-sz/2,maxZ:z+sz/2});return o}
 // Mediterranean village training map: plaster houses, timber framing, terracotta roofs and a church tower.
 block(0,2,-25,60,4,1,wallMat);block(0,2,25,60,4,1,wallMat);block(-30,2,0,1,4,50,wallMat);block(30,2,0,1,4,50,wallMat);
 const plaster=mat(0xd4c9b0),plasterLight=mat(0xe3d8c3),timber=mat(0x4c3020),roofTile=mat(0x914b32),roofLight=mat(0xb36a43),wood=mat(0x735137),doorMat=mat(0x3c6c70),windowMat=mat(0x27363a,.3),clothOrange=mat(0xd77a48),leafMat=mat(0x3e653b),flowerMat=mat(0xe2c44d);
@@ -233,7 +233,14 @@ timber.map=makeSurfaceMap('#4c3020','rgba(20,12,8,.42)','wood');wood.map=makeSur
 concrete.map=makeSurfaceMap('#68747a','rgba(25,35,38,.35)','stone');concrete.map.repeat.set(2,2);
 
 function villageHouse(x,z,w=8,d=7,h=4){
- block(x,h/2,z,w,h,d,plaster);
+ block(x,h/2,z,w,h,d,plaster,false);
+ // Real wall colliders leave a clear doorway; the house shell itself is visual only.
+ const front=z-d/2, back=z+d/2, doorHalf=.78;
+ colliders.push({minX:x-w/2,maxX:x+w/2,minZ:back-.12,maxZ:back+.12});
+ colliders.push({minX:x-w/2,maxX:x-w/2+.14,minZ:front,maxZ:back});
+ colliders.push({minX:x+w/2-.14,maxX:x+w/2,minZ:front,maxZ:back});
+ colliders.push({minX:x-w/2,maxX:x-doorHalf,minZ:front-.12,maxZ:front+.12});
+ colliders.push({minX:x+doorHalf,maxX:x+w/2,minZ:front-.12,maxZ:front+.12});
  for(const xx of [x-w*.42,x+w*.42])block(xx,h/2,z-d/2-.04,.22,h,.18,timber);
  block(x,h+.18,z,w+.35,.2,d+.35,timber);
  block(x,h*.35,z-d/2-.12,1.25,2.3,.18,doorMat);
@@ -403,7 +410,7 @@ function buildWeaponModel(name){
 buildWeaponModel(weapon);
 function flashMuzzle(){muzzleUntil=performance.now()+70;if(muzzleFlash){muzzleFlash.visible=true;setTimeout(()=>{if(muzzleFlash)muzzleFlash.visible=false},65)}}
 function collidesAt(x,z){const r=.42;return colliders.some(b=>x+r>b.minX&&x-r<b.maxX&&z+r>b.minZ&&z-r<b.maxZ)}
-function move(dt){if(!active)return;const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const dir=new THREE.Vector3();if(keys.KeyW||keys.ArrowUp)dir.add(forward);if(keys.KeyS||keys.ArrowDown)dir.sub(forward);if(keys.KeyD||keys.ArrowRight)dir.add(right);if(keys.KeyA||keys.ArrowLeft)dir.sub(right);dir.addScaledVector(forward,-touchY);dir.addScaledVector(right,touchX);if(dir.lengthSq()>1)dir.normalize();const dx=dir.x*dt*5.4,dz=dir.z*dt*5.4;const nx=THREE.MathUtils.clamp(player.pos.x+dx,-28,28);if(!collidesAt(nx,player.pos.z))player.pos.x=nx;const nz=THREE.MathUtils.clamp(player.pos.z+dz,-23,23);if(!collidesAt(player.pos.x,nz))player.pos.z=nz;const rampHeight=(player.pos.x>-1.55&&player.pos.x<1.55&&player.pos.z<15.3&&player.pos.z>7.1)?THREE.MathUtils.clamp((15.3-player.pos.z)*.25,0,1.95):0;const terraceTop=(Math.abs(player.pos.x)<4.05&&player.pos.z>7.1&&player.pos.z<12.8)?1.95:0;const groundY=1.7+Math.max(rampHeight,terraceTop);if(player.pos.y<=groundY+.05&&velocityY<=0){player.pos.y=groundY;velocityY=0;player.onGround=true}else{velocityY-=19*dt;player.pos.y+=velocityY*dt;if(player.pos.y<groundY){player.pos.y=groundY;velocityY=0;player.onGround=true}}camera.position.copy(player.pos);camera.position.y=player.pos.y-(crouching?.52:0);camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;camera.fov=aiming?(currentWeapon.slot==='Sniper'?22:48):76;camera.updateProjectionMatrix();$('scopeOverlay').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');$('scopeV').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');weaponModel.visible=true;}
+function move(dt){if(!active)return;const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const dir=new THREE.Vector3();if(keys.KeyW||keys.ArrowUp)dir.add(forward);if(keys.KeyS||keys.ArrowDown)dir.sub(forward);if(keys.KeyD||keys.ArrowRight)dir.add(right);if(keys.KeyA||keys.ArrowLeft)dir.sub(right);dir.addScaledVector(forward,-touchY);dir.addScaledVector(right,touchX);if(dir.lengthSq()>1)dir.normalize();const dx=dir.x*dt*5.4,dz=dir.z*dt*5.4;const nx=THREE.MathUtils.clamp(player.pos.x+dx,-28,28);if(!collidesAt(nx,player.pos.z))player.pos.x=nx;const nz=THREE.MathUtils.clamp(player.pos.z+dz,-23,23);if(!collidesAt(player.pos.x,nz))player.pos.z=nz;const onStairs=Math.abs(player.pos.x)<1.42&&player.pos.z<15.7&&player.pos.z>8.7;const stairHeight=onStairs?THREE.MathUtils.clamp((15.2-player.pos.z)*(1.95/(15.2-9.08)),0,1.95):0;const terraceTop=(Math.abs(player.pos.x)<4.05&&player.pos.z>7.1&&player.pos.z<9.55)?1.95:0;const groundY=1.7+Math.max(stairHeight,terraceTop);if(player.pos.y<=groundY+.05&&velocityY<=0){player.pos.y=groundY;velocityY=0;player.onGround=true}else{velocityY-=19*dt;player.pos.y+=velocityY*dt;if(player.pos.y<groundY){player.pos.y=groundY;velocityY=0;player.onGround=true}}camera.position.copy(player.pos);camera.position.y=player.pos.y-(crouching?.52:0);camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;camera.fov=aiming?(currentWeapon.slot==='Sniper'?22:48):76;camera.updateProjectionMatrix();$('scopeOverlay').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');$('scopeV').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');weaponModel.visible=true;}
 let touchX=0,touchY=0,stickPointer=null,lookPointer=null,lastLookX=0,lastLookY=0;
 const base=$('stickBase'),knob=$('stickKnob');
 base.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;base.setPointerCapture(e.pointerId);updateStick(e)});
