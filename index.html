@@ -173,6 +173,23 @@ scene.add(new THREE.HemisphereLight(0xd8e9ff,0x303b40,2.3));
 const sun=new THREE.DirectionalLight(0xffedcf,4);sun.position.set(-12,22,9);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-36;sun.shadow.camera.right=36;sun.shadow.camera.top=36;sun.shadow.camera.bottom=-36;scene.add(sun);
 const fillLight=new THREE.DirectionalLight(0x8fc9ff,1.15);fillLight.position.set(18,10,-15);scene.add(fillLight);
 const mat=(c,r=.85,m=0)=>new THREE.MeshStandardMaterial({color:c,roughness:r,metalness:m});
+function makeSurfaceMap(base,accent,mode='stone'){
+ const canvas=document.createElement('canvas');canvas.width=canvas.height=256;const ctx=canvas.getContext('2d');
+ ctx.fillStyle=base;ctx.fillRect(0,0,256,256);
+ let seed=mode.length*7919;const rand=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
+ for(let i=0;i<2400;i++){const a=.025+rand()*.12;ctx.fillStyle='rgba(255,255,255,'+a+')';ctx.fillRect(rand()*256,rand()*256,1+rand()*3,1+rand()*2)}
+ if(mode==='stone'||mode==='roof'){
+  const step=mode==='roof'?28:64;ctx.strokeStyle=accent;ctx.lineWidth=mode==='roof'?3:2;
+  for(let y=0;y<=256;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(256,y);ctx.stroke();for(let x=(y/step%2)*step/2;x<256;x+=step){ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y+step);ctx.stroke()}}
+  if(mode==='roof'){ctx.strokeStyle='rgba(255,205,155,.25)';ctx.lineWidth=1;for(let y=8;y<256;y+=28){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(256,y);ctx.stroke()}}
+ }else if(mode==='wood'){
+  ctx.strokeStyle=accent;ctx.lineWidth=2;for(let x=8;x<256;x+=13){ctx.beginPath();ctx.moveTo(x,0);ctx.bezierCurveTo(x+4,80,x-3,170,x+2,256);ctx.stroke()}
+ }else{
+  ctx.strokeStyle=accent;ctx.lineWidth=1;for(let i=0;i<20;i++){const x=rand()*256,y=rand()*256;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+rand()*28,y+rand()*24);ctx.stroke()}
+ }
+ const tex=new THREE.CanvasTexture(canvas);tex.wrapS=tex.wrapT=THREE.RepeatWrapping;tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return tex;
+}
+floorMat.map=makeSurfaceMap('#303d40','#566367','stone');floorMat.map.repeat.set(14,14);floorMat.needsUpdate=true;
 const floorMat=mat(0x303d40),wallMat=mat(0x28343d),concrete=mat(0x68747a),dark=mat(0x171f28),accent=mat(0xc7ff43),targetMat=mat(0xc3cbd0),floorPaint=mat(0x87939a,.65);
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
 const colliders=[];
@@ -180,6 +197,11 @@ function block(x,y,z,sx,sy,sz,material){const o=new THREE.Mesh(new THREE.BoxGeom
 // Mediterranean village training map: plaster houses, timber framing, terracotta roofs and a church tower.
 block(0,2,-25,60,4,1,wallMat);block(0,2,25,60,4,1,wallMat);block(-30,2,0,1,4,50,wallMat);block(30,2,0,1,4,50,wallMat);
 const plaster=mat(0xd4c9b0),plasterLight=mat(0xe3d8c3),timber=mat(0x4c3020),roofTile=mat(0x914b32),roofLight=mat(0xb36a43),wood=mat(0x735137),doorMat=mat(0x3c6c70),windowMat=mat(0x27363a,.3),clothOrange=mat(0xd77a48),leafMat=mat(0x3e653b),flowerMat=mat(0xe2c44d);
+plaster.map=makeSurfaceMap('#d4c9b0','rgba(93,75,55,.12)','plaster');plasterLight.map=makeSurfaceMap('#e3d8c3','rgba(93,75,55,.10)','plaster');plaster.map.repeat.set(2,2);plasterLight.map.repeat.set(2,2);
+roofTile.map=makeSurfaceMap('#914b32','rgba(65,25,18,.55)','roof');roofLight.map=makeSurfaceMap('#b36a43','rgba(70,30,18,.5)','roof');roofTile.map.repeat.set(2,2);roofLight.map.repeat.set(2,2);
+timber.map=makeSurfaceMap('#4c3020','rgba(20,12,8,.42)','wood');wood.map=makeSurfaceMap('#735137','rgba(30,18,10,.4)','wood');timber.map.repeat.set(1,1);wood.map.repeat.set(1,1);
+concrete.map=makeSurfaceMap('#68747a','rgba(25,35,38,.35)','stone');concrete.map.repeat.set(2,2);
+
 function villageHouse(x,z,w=8,d=7,h=4){
  block(x,h/2,z,w,h,d,plaster);
  for(const xx of [x-w*.42,x+w*.42])block(xx,h/2,z-d/2-.04,.22,h,.18,timber);
