@@ -181,7 +181,7 @@ function villageHouse(x,z,w=8,d=7,h=4){
 }
 villageHouse(-16,-10,9,8,4.2);villageHouse(14,-13,9,8,4.4);villageHouse(19,4,8,7,4);villageHouse(-19,6,8,7,4);villageHouse(0,-21,10,7,4.3);
 // Raised training terrace with broad, visible steps and a firing parapet.
-const terraceStone=mat(0x9a9b8b),terraceEdge=mat(0x554b3d),terraceRail=mat(0x68462f);
+const terraceColliderStart=colliders.length;const terraceStone=mat(0x9a9b8b),terraceEdge=mat(0x554b3d),terraceRail=mat(0x68462f);
 block(0,3.55,10,8.8,.35,6.4,terraceStone);
 block(0,3.78,6.78,8.8,.18,.18,terraceEdge);
 block(-4.25,3.9,10,.18,.7,6.2,terraceEdge);block(4.25,3.9,10,.18,.7,6.2,terraceEdge);
@@ -189,7 +189,7 @@ block(-2.8,4.05,12.95,2.9,.6,.18,terraceEdge);block(2.8,4.05,12.95,2.9,.6,.18,te
 // Open stairs climb from the ground at the front to the terrace; no door blocks the route.
 for(let i=0;i<7;i++){const h=.52*(i+1);const z=15.2-i*1.02;block(0,h/2,z,2.7,h,.98,terraceStone);block(-1.43,h/2,z,.12,h,.98,terraceEdge);block(1.43,h/2,z,.12,h,.98,terraceEdge)}
 for(let i=0;i<5;i++){block(-3.2+i*1.6,4.18,7.4,.08,.55,.08,terraceRail);block(-3.2+i*1.6,4.18,12.3,.08,.55,.08,terraceRail)}
-block(0,4.48,7.4,6.6,.08,.08,terraceRail);block(0,4.48,12.3,6.6,.08,.08,terraceRail);
+block(0,4.48,7.4,6.6,.08,.08,terraceRail);block(0,4.48,12.3,6.6,.08,.08,terraceRail);colliders.splice(terraceColliderStart);
 
 // Church tower in the skyline
 block(4,4,-23,2.6,8,2.6,plasterLight);const towerRoof=new THREE.Mesh(new THREE.ConeGeometry(2.15,3,4),roofTile);towerRoof.position.set(4,9.5,-23);towerRoof.rotation.y=Math.PI/4;towerRoof.castShadow=true;scene.add(towerRoof);
@@ -244,7 +244,7 @@ function makeTarget(x,z){
  part(g,new THREE.BoxGeometry(.2,.12,.32),bootMat,[-.16,.22,-.025]);part(g,new THREE.BoxGeometry(.2,.12,.32),bootMat,[.16,.22,-.025]);
  const armL=part(g,new THREE.CapsuleGeometry(.09,.42,4,8),uniform,[-.43,1.25,-.08],[0,0,-.28]);
  const armR=part(g,new THREE.CapsuleGeometry(.09,.42,4,8),uniform,[.43,1.25,-.08],[0,0,.28]);
- const rifle=part(g,new THREE.BoxGeometry(.09,.09,.68),gunMetal,[.18,1.22,-.38],[0,0,-.05]);
+ const rifle=part(g,new THREE.BoxGeometry(.09,.09,.68),mat(0x252b2c,.3,.78),[.18,1.22,-.38],[0,0,-.05]);
  g.userData={hp:100,body:torso,head,alive:true,falling:false,fallTime:0,spawnX:x,spawnZ:z,hitFlash:0,legL,legR,armL,armR,rifle,phase:Math.random()*6.28,patrol:Math.random()*2.5+1.2,dir:Math.random()>.5?1:-1,baseX:x,baseZ:z,stun:0};
  scene.add(g);targets.push(g)
 }
@@ -324,7 +324,7 @@ function buildWeaponModel(name){
 buildWeaponModel(weapon);
 function flashMuzzle(){muzzleUntil=performance.now()+70;if(muzzleFlash){muzzleFlash.visible=true;setTimeout(()=>{if(muzzleFlash)muzzleFlash.visible=false},65)}}
 function collidesAt(x,z){const r=.42;return colliders.some(b=>x+r>b.minX&&x-r<b.maxX&&z+r>b.minZ&&z-r<b.maxZ)}
-function move(dt){if(!active)return;const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const dir=new THREE.Vector3();if(keys.KeyW||keys.ArrowUp)dir.add(forward);if(keys.KeyS||keys.ArrowDown)dir.sub(forward);if(keys.KeyD||keys.ArrowRight)dir.add(right);if(keys.KeyA||keys.ArrowLeft)dir.sub(right);dir.addScaledVector(forward,-touchY);dir.addScaledVector(right,touchX);if(dir.lengthSq()>1)dir.normalize();const dx=dir.x*dt*5.4,dz=dir.z*dt*5.4;const nx=THREE.MathUtils.clamp(player.pos.x+dx,-28,28);if(!collidesAt(nx,player.pos.z))player.pos.x=nx;const nz=THREE.MathUtils.clamp(player.pos.z+dz,-23,23);if(!collidesAt(player.pos.x,nz))player.pos.z=nz;velocityY-=19*dt;player.pos.y+=velocityY*dt;if(player.pos.y<1.7){player.pos.y=1.7;velocityY=0;player.onGround=true}camera.position.copy(player.pos);camera.position.y=crouching?1.18:1.7;camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;camera.fov=aiming?(currentWeapon.slot==='Sniper'?22:48):76;camera.updateProjectionMatrix();$('scopeOverlay').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');$('scopeV').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');weaponModel.visible=true;}
+function move(dt){if(!active)return;const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const dir=new THREE.Vector3();if(keys.KeyW||keys.ArrowUp)dir.add(forward);if(keys.KeyS||keys.ArrowDown)dir.sub(forward);if(keys.KeyD||keys.ArrowRight)dir.add(right);if(keys.KeyA||keys.ArrowLeft)dir.sub(right);dir.addScaledVector(forward,-touchY);dir.addScaledVector(right,touchX);if(dir.lengthSq()>1)dir.normalize();const dx=dir.x*dt*5.4,dz=dir.z*dt*5.4;const nx=THREE.MathUtils.clamp(player.pos.x+dx,-28,28);if(!collidesAt(nx,player.pos.z))player.pos.x=nx;const nz=THREE.MathUtils.clamp(player.pos.z+dz,-23,23);if(!collidesAt(player.pos.x,nz))player.pos.z=nz;const rampHeight=(player.pos.x>-1.55&&player.pos.x<1.55&&player.pos.z<15.3&&player.pos.z>7.1)?THREE.MathUtils.clamp((15.3-player.pos.z)*.25,0,1.95):0;const terraceTop=(Math.abs(player.pos.x)<4.05&&player.pos.z>7.1&&player.pos.z<12.8)?1.95:0;const groundY=1.7+Math.max(rampHeight,terraceTop);if(player.pos.y<=groundY+.05&&velocityY<=0){player.pos.y=groundY;velocityY=0;player.onGround=true}else{velocityY-=19*dt;player.pos.y+=velocityY*dt;if(player.pos.y<groundY){player.pos.y=groundY;velocityY=0;player.onGround=true}}camera.position.copy(player.pos);camera.position.y=crouching?1.18:1.7;camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;camera.fov=aiming?(currentWeapon.slot==='Sniper'?22:48):76;camera.updateProjectionMatrix();$('scopeOverlay').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');$('scopeV').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');weaponModel.visible=true;}
 let touchX=0,touchY=0,stickPointer=null,lookPointer=null,lastLookX=0,lastLookY=0;
 const base=$('stickBase'),knob=$('stickKnob');
 base.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;base.setPointerCapture(e.pointerId);updateStick(e)});
