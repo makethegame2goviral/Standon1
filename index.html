@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#0b1118">
-<title>Standon1 — Tactical FPS</title>
+<title>Standon2 — Tactical FPS</title>
 <style>
 :root{color-scheme:dark;--lime:#c7ff43;--panel:rgba(9,15,22,.88);--line:rgba(255,255,255,.13)}
 #damageFlash{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;background:radial-gradient(ellipse at center,transparent 45%,rgba(255,35,35,.26) 100%);transition:opacity .12s}#hitmarker{position:absolute;left:50%;top:50%;width:24px;height:24px;transform:translate(-50%,-50%);opacity:0;color:#ff6b58;font-weight:900;font-size:24px;text-shadow:0 1px 4px #000}#hitmarker.show{opacity:1}#touch .touchBtn{touch-action:none}
@@ -145,7 +145,7 @@ button,.touchBtn{-webkit-tap-highlight-color:transparent;touch-action:none}
 <div id="game"></div><div id="damageFlash"></div>
 <div id="hud">
   <div id="topbar">
-    <div class="panel"><div class="brand">STANDON<span>1</span></div><div class="small">Training arena</div></div>
+    <div class="panel"><div class="brand">STANDON<span>2</span></div><div class="small">Training arena</div></div>
     <div id="stats">
       <div class="panel stat"><div class="small">Round</div><strong id="round">1 / 10</strong></div>
       <div class="panel stat"><div class="small">Match cash</div><strong id="cash">$3,000</strong></div>
@@ -158,7 +158,7 @@ button,.touchBtn{-webkit-tap-highlight-color:transparent;touch-action:none}
   <div id="bottom"><div class="panel"><div class="small">Equipped</div><div class="weaponName" id="weaponName">GLOCK</div><div class="ammo" id="ammo">20 / 20</div></div><div class="panel"><div class="small">Health</div><div class="weaponName" id="health">100</div></div></div>
   <div id="touch"><div id="stickBase"><div id="stickKnob"></div></div><div id="mobileLook"></div><div class="touchBtn" id="fire" aria-label="Fire">FIRE</div><div class="touchBtn" id="jump" aria-label="Jump">↗</div><div class="touchBtn" id="crouch" aria-label="Crouch">⌄</div><div class="touchBtn" id="reload" aria-label="Reload">↻</div><div class="touchBtn" id="switch" aria-label="Switch weapon">▰</div><div class="touchBtn" id="aim" aria-label="Aim">⊙</div></div>
 </div>
-<div id="menu"><div class="menuCard"><div class="kicker">TACTICAL FPS · WEB PROTOTYPE</div><div class="title">STANDON<span>1</span></div><p class="desc">Enter the training arena. Test first-person movement, aiming, shooting, jumping, weapon selection and the responsive PC / tablet controls.</p><div class="actions"><button class="primary" id="play">ENTER ARENA</button><button id="menuShop">WEAPON SHOP</button></div><div class="note">PROTOTYPE BUILD 0.1 · Local training only. Online matchmaking and server-authoritative combat are not connected yet.</div></div></div>
+<div id="menu"><div class="menuCard"><div class="kicker">TACTICAL FPS · WEB PROTOTYPE</div><div class="title">STANDON<span>2</span></div><p class="desc">Enter the training arena. Test first-person movement, aiming, shooting, jumping, weapon selection and the responsive PC / tablet controls.</p><div class="actions"><button class="primary" id="play">ENTER ARENA</button><button id="menuShop">WEAPON SHOP</button></div><div class="note">PROTOTYPE BUILD 0.1 · Local training only. Online matchmaking and server-authoritative combat are not connected yet.</div></div></div>
 <div id="shop"><div class="shopCard"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:16px"><div><div class="kicker">LOADOUT</div><h2 style="margin:5px 0">Weapon shop</h2><div class="small">Match cash: <span id="shopCash">$3,000</span></div></div><button id="shopClose">CLOSE ✕</button></div><div class="shopGrid" id="shopGrid"></div><p class="note">Purchases in this prototype are local and reset when the page reloads. Server validation will be added with multiplayer.</p></div></div>
 <script>
 /* Standon2 safety fallback: keep the menu responsive if the 3D module fails to initialize. */
