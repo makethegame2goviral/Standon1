@@ -127,6 +127,18 @@ button,.touchBtn{-webkit-tap-highlight-color:transparent;touch-action:none}
 #scopeV{display:none;position:fixed;left:50%;top:50%;width:2px;height:min(72vw,72vh);transform:translate(-50%,-50%);background:rgba(30,35,34,.85);z-index:4;pointer-events:none;box-shadow:1px 0 #ffffff60}
 #scopeOverlay.active,#scopeV.active{display:block}
 @media(max-width:390px){#switch,#aim{right:143px!important}}
+/* Final combat polish: keep the HUD usable while aiming. */
+#touch{z-index:7!important}
+#touch .touchBtn{z-index:7!important}
+#scopeOverlay{z-index:3!important;background:radial-gradient(circle,transparent 0 min(35vw,35vh),rgba(0,0,0,.88) min(35vw,35vh) 100%)}
+#scopeV{z-index:4!important;height:min(70vw,70vh);background:#182020;box-shadow:1px 0 #ffffff85}
+#scopeOverlay:before{width:min(70vw,70vh);height:min(70vw,70vh);border:3px solid rgba(15,19,20,.98);box-shadow:inset 0 0 0 2px #ffffff70}
+#scopeOverlay:after{width:min(70vw,70vh);height:2px;background:#182020;box-shadow:0 -1px #ffffff85}
+#crosshair{z-index:5!important}#hitmarker{z-index:8!important}
+#topbar,#minimap,#bottom,#shopOpen{z-index:6!important}
+#aim.active,#fire.active{background:rgba(198,255,67,.34)!important;border-color:#c7ff43!important}
+#switch:after{content:"P";position:absolute;right:-4px;bottom:-3px;border-radius:8px;background:#d6ff66;color:#17200d;font-size:10px;font-weight:900;padding:2px 5px;border:1px solid #17200d}
+
 </style>
 </head>
 <body>
@@ -285,12 +297,18 @@ function buildWeaponModel(name){
  part(weaponModel,new THREE.BoxGeometry(.25,.32,.46),sleeveMat,[.12,-.48,-.31],[0,0,-.22]);
  part(weaponModel,new THREE.BoxGeometry(.17,.12,.23),skinMat,[.29,-.36,-.49],[.15,0,-.12]);
  if(isKnife){
-   part(weaponModel,new THREE.BoxGeometry(.13,.24,.14),polymer,[.31,-.39,-.47],[-.25,0,0]);
-   part(weaponModel,new THREE.BoxGeometry(.045,.1,.2),gunEdge,[.31,-.26,-.61],[-.2,0,0]);
-   part(weaponModel,new THREE.BoxGeometry(.065,.035,.36),gunEdge,[.31,-.21,-.82],[0,0,-.04]);
-   part(weaponModel,new THREE.ConeGeometry(.045,.17,5),gunEdge,[.31,-.21,-1.08],[-Math.PI/2,0,0]);
-   return;
- }
+    // Detailed tactical knife: shaped steel blade, reinforced guard and textured grip.
+    const gripMat=mat(0x252b2c,.86),gripInset=mat(0x46504e,.8),bladeMat=mat(0xb8c5c8,.24,.88),bladeDark=mat(0x65777c,.3,.82);
+    part(weaponModel,new THREE.BoxGeometry(.105,.095,.31),gripMat,[.31,-.40,-.49],[.18,0,-.12]);
+    for(let i=0;i<4;i++)part(weaponModel,new THREE.BoxGeometry(.112,.012,.035),gripInset,[.31,-.355,-.39-i*.065],[.18,0,-.12]);
+    part(weaponModel,new THREE.BoxGeometry(.19,.045,.075),gunBlack,[.31,-.34,-.65],[0,0,-.08]);
+    const bladeShape=new THREE.Shape();bladeShape.moveTo(-.065,0);bladeShape.lineTo(.065,0);bladeShape.lineTo(.052,.26);bladeShape.lineTo(.018,.49);bladeShape.lineTo(-.012,.57);bladeShape.lineTo(-.055,.28);bladeShape.closePath();
+    const bladeGeo=new THREE.ExtrudeGeometry(bladeShape,{depth:.018,bevelEnabled:true,bevelSegments:2,steps:1,bevelSize:.008,bevelThickness:.006});
+    part(weaponModel,bladeGeo,bladeMat,[.31,-.32,-1.22],[-Math.PI/2,0,0]);
+    part(weaponModel,new THREE.BoxGeometry(.012,.025,.45),bladeDark,[.31,-.305,-.99],[-Math.PI/2,0,0]);
+    part(weaponModel,new THREE.BoxGeometry(.025,.018,.3),gunBlack,[.31,-.44,-.49],[.18,0,-.12]);
+    return;
+  }
  if(isPistol){
    // Compact slide, barrel, trigger guard, grip and magazine.
    part(weaponModel,new THREE.BoxGeometry(.18,.14,.48),gunMetal,[.32,-.27,-.62]);
@@ -324,7 +342,7 @@ function buildWeaponModel(name){
 buildWeaponModel(weapon);
 function flashMuzzle(){muzzleUntil=performance.now()+70;if(muzzleFlash){muzzleFlash.visible=true;setTimeout(()=>{if(muzzleFlash)muzzleFlash.visible=false},65)}}
 function collidesAt(x,z){const r=.42;return colliders.some(b=>x+r>b.minX&&x-r<b.maxX&&z+r>b.minZ&&z-r<b.maxZ)}
-function move(dt){if(!active)return;const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const dir=new THREE.Vector3();if(keys.KeyW||keys.ArrowUp)dir.add(forward);if(keys.KeyS||keys.ArrowDown)dir.sub(forward);if(keys.KeyD||keys.ArrowRight)dir.add(right);if(keys.KeyA||keys.ArrowLeft)dir.sub(right);dir.addScaledVector(forward,-touchY);dir.addScaledVector(right,touchX);if(dir.lengthSq()>1)dir.normalize();const dx=dir.x*dt*5.4,dz=dir.z*dt*5.4;const nx=THREE.MathUtils.clamp(player.pos.x+dx,-28,28);if(!collidesAt(nx,player.pos.z))player.pos.x=nx;const nz=THREE.MathUtils.clamp(player.pos.z+dz,-23,23);if(!collidesAt(player.pos.x,nz))player.pos.z=nz;const rampHeight=(player.pos.x>-1.55&&player.pos.x<1.55&&player.pos.z<15.3&&player.pos.z>7.1)?THREE.MathUtils.clamp((15.3-player.pos.z)*.25,0,1.95):0;const terraceTop=(Math.abs(player.pos.x)<4.05&&player.pos.z>7.1&&player.pos.z<12.8)?1.95:0;const groundY=1.7+Math.max(rampHeight,terraceTop);if(player.pos.y<=groundY+.05&&velocityY<=0){player.pos.y=groundY;velocityY=0;player.onGround=true}else{velocityY-=19*dt;player.pos.y+=velocityY*dt;if(player.pos.y<groundY){player.pos.y=groundY;velocityY=0;player.onGround=true}}camera.position.copy(player.pos);camera.position.y=crouching?1.18:1.7;camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;camera.fov=aiming?(currentWeapon.slot==='Sniper'?22:48):76;camera.updateProjectionMatrix();$('scopeOverlay').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');$('scopeV').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');weaponModel.visible=true;}
+function move(dt){if(!active)return;const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const dir=new THREE.Vector3();if(keys.KeyW||keys.ArrowUp)dir.add(forward);if(keys.KeyS||keys.ArrowDown)dir.sub(forward);if(keys.KeyD||keys.ArrowRight)dir.add(right);if(keys.KeyA||keys.ArrowLeft)dir.sub(right);dir.addScaledVector(forward,-touchY);dir.addScaledVector(right,touchX);if(dir.lengthSq()>1)dir.normalize();const dx=dir.x*dt*5.4,dz=dir.z*dt*5.4;const nx=THREE.MathUtils.clamp(player.pos.x+dx,-28,28);if(!collidesAt(nx,player.pos.z))player.pos.x=nx;const nz=THREE.MathUtils.clamp(player.pos.z+dz,-23,23);if(!collidesAt(player.pos.x,nz))player.pos.z=nz;const rampHeight=(player.pos.x>-1.55&&player.pos.x<1.55&&player.pos.z<15.3&&player.pos.z>7.1)?THREE.MathUtils.clamp((15.3-player.pos.z)*.25,0,1.95):0;const terraceTop=(Math.abs(player.pos.x)<4.05&&player.pos.z>7.1&&player.pos.z<12.8)?1.95:0;const groundY=1.7+Math.max(rampHeight,terraceTop);if(player.pos.y<=groundY+.05&&velocityY<=0){player.pos.y=groundY;velocityY=0;player.onGround=true}else{velocityY-=19*dt;player.pos.y+=velocityY*dt;if(player.pos.y<groundY){player.pos.y=groundY;velocityY=0;player.onGround=true}}camera.position.copy(player.pos);camera.position.y=player.pos.y-(crouching?.52:0);camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;camera.fov=aiming?(currentWeapon.slot==='Sniper'?22:48):76;camera.updateProjectionMatrix();$('scopeOverlay').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');$('scopeV').classList.toggle('active',aiming&&currentWeapon.slot==='Sniper');weaponModel.visible=true;}
 let touchX=0,touchY=0,stickPointer=null,lookPointer=null,lastLookX=0,lastLookY=0;
 const base=$('stickBase'),knob=$('stickKnob');
 base.addEventListener('pointerdown',e=>{e.preventDefault();stickPointer=e.pointerId;base.setPointerCapture(e.pointerId);updateStick(e)});
