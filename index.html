@@ -180,6 +180,17 @@ function villageHouse(x,z,w=8,d=7,h=4){
  for(let i=0;i<Math.floor(w/1.2);i++)block(x-w/2+i*1.2,h+.04,z-d/2-.16,.07,.13,.16,timber)
 }
 villageHouse(-16,-10,9,8,4.2);villageHouse(14,-13,9,8,4.4);villageHouse(19,4,8,7,4);villageHouse(-19,6,8,7,4);villageHouse(0,-21,10,7,4.3);
+// Raised training terrace with broad, visible steps and a firing parapet.
+const terraceStone=mat(0x9a9b8b),terraceEdge=mat(0x554b3d),terraceRail=mat(0x68462f);
+block(0,3.55,10,8.8,.35,6.4,terraceStone);
+block(0,3.78,6.78,8.8,.18,.18,terraceEdge);
+block(-4.25,3.9,10,.18,.7,6.2,terraceEdge);block(4.25,3.9,10,.18,.7,6.2,terraceEdge);
+block(-2.8,4.05,12.95,2.9,.6,.18,terraceEdge);block(2.8,4.05,12.95,2.9,.6,.18,terraceEdge);
+// Open stairs climb from the ground at the front to the terrace; no door blocks the route.
+for(let i=0;i<7;i++){const h=.52*(i+1);const z=15.2-i*1.02;block(0,h/2,z,2.7,h,.98,terraceStone);block(-1.43,h/2,z,.12,h,.98,terraceEdge);block(1.43,h/2,z,.12,h,.98,terraceEdge)}
+for(let i=0;i<5;i++){block(-3.2+i*1.6,4.18,7.4,.08,.55,.08,terraceRail);block(-3.2+i*1.6,4.18,12.3,.08,.55,.08,terraceRail)}
+block(0,4.48,7.4,6.6,.08,.08,terraceRail);block(0,4.48,12.3,6.6,.08,.08,terraceRail);
+
 // Church tower in the skyline
 block(4,4,-23,2.6,8,2.6,plasterLight);const towerRoof=new THREE.Mesh(new THREE.ConeGeometry(2.15,3,4),roofTile);towerRoof.position.set(4,9.5,-23);towerRoof.rotation.y=Math.PI/4;towerRoof.castShadow=true;scene.add(towerRoof);
 for(const y of [4.6,6.1])block(4,y,-21.67,.45,.9,.12,windowMat);
@@ -221,7 +232,22 @@ const weapons=[
 const inventory={Pistol:'Glock',Primary:null,Knife:'Knife'};
 let currentWeapon=weapons[0];
 const targets=[];
-function makeTarget(x,z){const g=new THREE.Group();g.position.set(x,0,z);const body=new THREE.Mesh(new THREE.CapsuleGeometry(.42,.9,5,12),targetMat);body.position.y=1.15;body.castShadow=true;body.receiveShadow=true;g.add(body);const head=new THREE.Mesh(new THREE.SphereGeometry(.27,16,12),mat(0xe1bda0));head.position.y=1.95;head.castShadow=true;g.add(head);const plate=new THREE.Mesh(new THREE.BoxGeometry(.9,.18,.08),dark);plate.position.set(0,1.28,.36);g.add(plate);const vest=new THREE.Mesh(new THREE.BoxGeometry(.62,.65,.38),mat(0x586c72,.7,.15));vest.position.set(0,1.25,0);g.add(vest);g.userData={hp:100,body,head,alive:true,falling:false,fallTime:0,spawnX:x,spawnZ:z,hitFlash:0};scene.add(g);targets.push(g)}
+function makeTarget(x,z){
+ const g=new THREE.Group();g.position.set(x,0,z);
+ const uniform=mat(Math.random()>.5?0x485b50:0x4b566b,.88),vestMat=mat(0x252e2d,.82),bootMat=mat(0x262521,.9),skin=mat(0xb88768,.9),gear=mat(0x857653,.9);
+ const torso=part(g,new THREE.CapsuleGeometry(.34,.58,5,10),uniform,[0,1.22,0]);
+ const vest=part(g,new THREE.BoxGeometry(.53,.55,.32),vestMat,[0,1.27,-.015]);
+ const head=part(g,new THREE.SphereGeometry(.235,16,12),skin,[0,1.91,0]);
+ const helmet=part(g,new THREE.SphereGeometry(.25,12,8,0,Math.PI*2,0,Math.PI*.58),gear,[0,2.02,0]);
+ const legL=part(g,new THREE.CapsuleGeometry(.105,.48,4,8),uniform,[-.16,.52,0]);
+ const legR=part(g,new THREE.CapsuleGeometry(.105,.48,4,8),uniform,[.16,.52,0]);
+ part(g,new THREE.BoxGeometry(.2,.12,.32),bootMat,[-.16,.22,-.025]);part(g,new THREE.BoxGeometry(.2,.12,.32),bootMat,[.16,.22,-.025]);
+ const armL=part(g,new THREE.CapsuleGeometry(.09,.42,4,8),uniform,[-.43,1.25,-.08],[0,0,-.28]);
+ const armR=part(g,new THREE.CapsuleGeometry(.09,.42,4,8),uniform,[.43,1.25,-.08],[0,0,.28]);
+ const rifle=part(g,new THREE.BoxGeometry(.09,.09,.68),gunMetal,[.18,1.22,-.38],[0,0,-.05]);
+ g.userData={hp:100,body:torso,head,alive:true,falling:false,fallTime:0,spawnX:x,spawnZ:z,hitFlash:0,legL,legR,armL,armR,rifle,phase:Math.random()*6.28,patrol:Math.random()*2.5+1.2,dir:Math.random()>.5?1:-1,baseX:x,baseZ:z,stun:0};
+ scene.add(g);targets.push(g)
+}
 [[-15,-16],[-3,-17],[12,-18],[22,-12],[-22,1],[-10,15],[8,17],[22,5],[3,1]].forEach(p=>makeTarget(...p));
 const raycaster=new THREE.Raycaster();let keys={};let velocityY=0;const clock=new THREE.Clock();
 function toast(msg){$('toast').textContent=msg;clearTimeout(toast.t);toast.t=setTimeout(()=>$('toast').textContent='',1600)}
@@ -243,7 +269,10 @@ function jump(){if(active&&player.onGround){velocityY=7.4;player.onGround=false}
 function reload(){if(!active||reloading||weapon==='Knife'||ammo===mag)return;reloading=true;toast('Reloading…');setTimeout(()=>{ammo=mag;reloading=false;updateHud()},950)}
 function shoot(){if(!active||$('shop').style.display==='grid'||(!document.pointerLockElement&&matchMedia('(pointer:fine)').matches))return;const now=performance.now();if(now-lastShot<currentWeapon.rate||reloading)return;lastShot=now;const origin=camera.position.clone();raycaster.setFromCamera(new THREE.Vector2(0,0),camera);raycaster.far=weapon==='Knife'?2.4:65;const hits=raycaster.intersectObjects(scene.children,true).filter(h=>h.object!==floor&&!weaponModel.getObjectById(h.object.id));const hit=hits[0];let end=origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(raycaster.far));if(hit)end.copy(hit.point);if(weapon==='Knife'){if(hit){const t=targets.find(o=>hit.object===o||o.children.includes(hit.object));if(t&&t.userData.alive){damageTarget(t,45,hit.point);}}return}if(ammo<=0){toast('Press R to reload');return}ammo--;updateHud();const muzzleOrigin=new THREE.Vector3(.34,-.25,weapon==='Glock'?-.98:-1.5);camera.localToWorld(muzzleOrigin);addTracer(muzzleOrigin,end);flashMuzzle();if(hit){const t=targets.find(t=>t.userData.alive&&(hit.object===t||t.children.includes(hit.object)));if(t){const isHead=hit.object===t.userData.head;const dmg=currentWeapon.slot==='Sniper'&&isHead?999:currentWeapon.damage*(isHead?1.5:1);damageTarget(t,dmg,hit.point)}else{burst(hit.point,0xffd28a,5)}}}
 function damageTarget(t,d,point){if(!t.userData.alive||t.userData.falling)return;t.userData.hp-=d;t.userData.hitFlash=.12;if(point)burst(point,0xff493d,10);$('hitmarker').classList.add('show');hitmarkerTimer=.12;if(t.userData.hp<=0){t.userData.alive=false;t.userData.falling=true;t.userData.fallTime=0;t.userData.fallDir=(Math.random()>.5?1:-1);scoreA++;cash+=300;updateHud();toast('Target down +$300')}else toast('HIT')}
-function tickTargets(dt){for(const t of targets){if(t.userData.falling){t.userData.fallTime+=dt;t.rotation.z=THREE.MathUtils.lerp(t.rotation.z,t.userData.fallDir*1.48,Math.min(1,dt*5));t.position.y=Math.max(-.1,t.position.y-dt*1.3);if(t.userData.fallTime>2.4){t.rotation.set(0,0,0);t.position.set(t.userData.spawnX,0,t.userData.spawnZ);t.userData.hp=100;t.userData.alive=true;t.userData.falling=false;t.userData.fallTime=0}}}}
+function tickTargets(dt){for(const t of targets){const u=t.userData;
+ if(u.falling){u.fallTime+=dt;t.rotation.z=THREE.MathUtils.lerp(t.rotation.z,u.fallDir*1.48,Math.min(1,dt*5));t.position.y=Math.max(-.1,t.position.y-dt*1.3);if(u.fallTime>2.4){t.rotation.set(0,0,0);t.position.set(u.spawnX,0,u.spawnZ);u.hp=100;u.alive=true;u.falling=false;u.fallTime=0;u.legL.rotation.z=0;u.legR.rotation.z=0}continue}
+ if(u.alive){u.phase+=dt*3.2;t.position.x=u.baseX+Math.sin(u.phase*.42)*u.patrol;t.rotation.y=Math.sin(u.phase*.42)*.4;u.legL.rotation.x=Math.sin(u.phase)*.48;u.legR.rotation.x=-Math.sin(u.phase)*.48;u.armL.rotation.x=Math.sin(u.phase)*.12;u.armR.rotation.x=-.12}
+ }}
 const weaponModel=new THREE.Group();camera.add(weaponModel);
 let muzzleFlash=null,muzzleUntil=0;
 const gunMetal=mat(0x252b2c,.3,.78),gunEdge=mat(0x596162,.32,.78),gunBlack=mat(0x111719,.42,.4),polymer=mat(0x333b3b,.72,.12),woodGrip=mat(0x49392d,.78),sleeveMat=mat(0x782b28,.94),skinMat=mat(0xb98c6a,.82);
