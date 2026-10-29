@@ -30,6 +30,30 @@
 #shop{position:fixed;inset:0;z-index:8;display:none;place-items:center;background:#0009;padding:18px}.shopCard{width:min(620px,100%);max-height:85vh;overflow:auto;background:#0a121c;border:1px solid var(--line);border-radius:16px;padding:20px}.shopGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:8px}.shopItem{display:flex;flex-direction:column;gap:7px;align-items:stretch;text-align:left}.shopItem small{color:#a9b6c3}.shopItem button{padding:9px}
 @media (pointer:coarse),(max-width:800px){#hint{top:72px;font-size:10px}#stats .stat{padding:8px 10px}#stats .stat strong{font-size:14px}#bottom{left:10px;bottom:10px}#touch{display:block}#desktopHint{display:none}}
 @media (max-width:440px){#topbar{top:8px;left:8px;right:8px}.brand{font-size:15px}.panel{padding:8px 10px}#stats{gap:5px}.small{font-size:9px}#bottom .panel{padding:9px 11px}}
+
+/* Village-style FPS HUD inspired by the reference screenshot */
+#topbar{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(600px,70vw);display:flex;justify-content:center;gap:4px}
+#topbar>.panel:first-child{display:none}#stats{width:100%;justify-content:center;gap:4px;flex-wrap:nowrap}
+#stats .stat{background:#171c20a8;border-radius:3px;padding:5px 10px;text-align:center;min-width:65px}
+#stats .stat strong{font-size:22px;line-height:1.05}
+#shopOpen{position:fixed;left:22%;bottom:18%;border-radius:50%;width:74px;height:74px;background:#252a2c77;border-color:#ffffff66;color:#e4e8ea}
+#crosshair{width:30px;height:30px}#crosshair:before{height:30px;left:14px}#crosshair:after{width:30px;top:14px}
+#crosshair:before,#crosshair:after{background:#b8ff62}
+#minimap{position:absolute;right:14px;top:8px;width:104px;height:104px;border-radius:50%;border:2px solid #b8babc;background:rgba(34,42,43,.78);box-shadow:0 2px 8px #0008;overflow:hidden}
+#minimap:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:#ffffff35}
+#minimap:after{content:"";position:absolute;top:50%;left:0;right:0;height:1px;background:#ffffff35}
+#mapDot{position:absolute;width:8px;height:8px;border-radius:50%;background:#ff8a35;left:51%;top:55%;box-shadow:0 0 0 3px #ff8a3533}
+#bottom{left:50%;transform:translateX(-50%);bottom:8px;gap:8px}
+#bottom .panel{background:transparent;border:0;box-shadow:none;text-align:center;padding:4px 8px}
+#bottom .panel:last-child{position:fixed;left:-46vw;bottom:0;color:#ffcc73}
+#bottom .panel:last-child .weaponName{font-size:32px;color:#ffcc73}
+#bottom .small{display:none}#ammo{font-size:27px;font-weight:800;color:white}
+#touch .touchBtn{background:#d0d0c72b;border:1px solid #ffffff55;color:#e5e7e7;text-shadow:0 1px 3px #000;font-size:12px}
+#stickBase{left:22px;bottom:28px;width:116px;height:116px;background:#d0d0c72b;border-color:#ffffff40}
+#stickKnob{left:33px;top:33px;background:#e8e8df4a;border-color:#ffffff60}
+#fire{right:28px;bottom:52px;width:82px;height:82px;background:#e5e5dd28;border-color:#ffffff55}
+#jump{right:118px;bottom:38px;width:58px;height:58px}#reload{right:38px;bottom:150px;width:48px;height:48px}#switch{right:117px;bottom:116px;width:58px;height:58px}
+@media(pointer:coarse),(max-width:800px){#hint{display:none}#topbar{top:8px;width:58vw}#stats .stat{padding:5px 7px;min-width:48px}#stats .stat strong{font-size:17px}#minimap{width:94px;height:94px;right:10px;top:8px}#bottom{bottom:6px}}
 </style>
 </head>
 <body>
@@ -44,7 +68,7 @@
       <button id="shopOpen">BUY</button>
     </div>
   </div>
-  <div id="crosshair"></div><div id="hitmarker">×</div><div id="hint">WASD MOVE · MOUSE LOOK · CLICK SHOOT · R RELOAD · SPACE JUMP · B SHOP · ESC RELEASE</div>
+  <div id="minimap"><div id="mapDot"></div></div><div id="crosshair"></div><div id="hitmarker">×</div><div id="hint">WASD MOVE · MOUSE LOOK · CLICK SHOOT · R RELOAD · SPACE JUMP · B SHOP · ESC RELEASE</div>
   <div id="toast"></div>
   <div id="bottom"><div class="panel"><div class="small">Equipped</div><div class="weaponName" id="weaponName">GLOCK</div><div class="ammo" id="ammo">20 / 20</div></div><div class="panel"><div class="small">Health</div><div class="weaponName" id="health">100</div></div></div>
   <div id="touch"><div id="stickBase"><div id="stickKnob"></div></div><div id="mobileLook"></div><div class="touchBtn" id="fire">FIRE</div><div class="touchBtn" id="jump">JUMP</div><div class="touchBtn" id="reload">R</div><div class="touchBtn" id="switch">SWAP</div></div>
@@ -68,15 +92,32 @@ const floorMat=mat(0x303d40),wallMat=mat(0x28343d),concrete=mat(0x68747a),dark=m
 const floor=new THREE.Mesh(new THREE.PlaneGeometry(100,100),floorMat);floor.rotation.x=-Math.PI/2;floor.receiveShadow=true;scene.add(floor);
 const colliders=[];
 function block(x,y,z,sx,sy,sz,material){const o=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;scene.add(o);if(sy>.2)colliders.push({minX:x-sx/2,maxX:x+sx/2,minZ:z-sz/2,maxZ:z+sz/2});return o}
-// Painted lane lines and a tactical center circle make the arena easier to read.
-for(let i=-2;i<=2;i++){const stripe=new THREE.Mesh(new THREE.BoxGeometry(.07,.012,38),floorPaint);stripe.position.set(i*2,.012,0);scene.add(stripe)}
-const ring=new THREE.Mesh(new THREE.RingGeometry(4.5,4.62,64),accent);ring.rotation.x=-Math.PI/2;ring.position.set(0,.02,0);scene.add(ring);
-const edgeLine=mat(0xc7ff43,.7,.1);for(const z of [-21,21]){const line=new THREE.Mesh(new THREE.BoxGeometry(48,.025,.12),edgeLine);line.position.set(0,.03,z);scene.add(line)}
+// Mediterranean village training map: plaster houses, timber framing, terracotta roofs and a church tower.
 block(0,2,-25,60,4,1,wallMat);block(0,2,25,60,4,1,wallMat);block(-30,2,0,1,4,50,wallMat);block(30,2,0,1,4,50,wallMat);
-for(let i=0;i<12;i++){const x=(i%4)*13-19.5,z=Math.floor(i/4)*13-13;block(x,1.1,z,3.2,2.2,3.2,i%2?concrete:dark);block(x,2.3,z,3.25,.12,3.25,accent)}
-// crates, cover and simple industrial structures
-for(const [x,z,s] of [[-11,-7,3],[10,-10,4],[-5,8,3],[15,9,4],[-19,13,3],[20,-1,3],[2,-19,3]]){block(x,s*.32,z,s,s*.64,s,concrete);block(x,s*.64,z,s+.08,.12,s+.08,dark)}
-for(let i=0;i<8;i++){const p=block(-23+i*6,.55,-21,2.5,1.1,.7,wallMat);p.rotation.y=(i%2)*.12}
+const plaster=mat(0xd4c9b0),plasterLight=mat(0xe3d8c3),timber=mat(0x4c3020),roofTile=mat(0x914b32),roofLight=mat(0xb36a43),wood=mat(0x735137),doorMat=mat(0x3c6c70),windowMat=mat(0x27363a,.3),clothOrange=mat(0xd77a48),leafMat=mat(0x3e653b),flowerMat=mat(0xe2c44d);
+function villageHouse(x,z,w=8,d=7,h=4){
+ block(x,h/2,z,w,h,d,plaster);
+ for(const xx of [x-w*.42,x+w*.42])block(xx,h/2,z-d/2-.04,.22,h,.18,timber);
+ block(x,h+.18,z,w+.35,.2,d+.35,timber);
+ block(x,h*.35,z-d/2-.12,1.25,2.3,.18,doorMat);
+ for(const xx of [x-w*.28,x+w*.28]){block(xx,h*.65,z-d/2-.13,.78,.82,.14,windowMat);block(xx,h*.65,z-d/2-.22,.9,.08,.08,timber);block(xx,h*.65,z-d/2-.22,.08,.9,.08,timber)}
+ for(const xx of [x-w/2-.05,x+w/2+.05])block(xx,h/2,z,.16,h,d+.15,timber);
+ const roofA=new THREE.Mesh(new THREE.BoxGeometry(w*.58,.18,d+1),roofTile);roofA.position.set(x-w*.22,h+.65,z);roofA.rotation.z=-.48;roofA.castShadow=true;scene.add(roofA);
+ const roofB=new THREE.Mesh(new THREE.BoxGeometry(w*.58,.18,d+1),roofLight);roofB.position.set(x+w*.22,h+.65,z);roofB.rotation.z=.48;roofB.castShadow=true;scene.add(roofB);
+ for(let i=0;i<Math.floor(w/1.2);i++)block(x-w/2+i*1.2,h+.04,z-d/2-.16,.07,.13,.16,timber)
+}
+villageHouse(-16,-10,9,8,4.2);villageHouse(14,-13,9,8,4.4);villageHouse(19,4,8,7,4);villageHouse(-19,6,8,7,4);villageHouse(0,-21,10,7,4.3);
+// Church tower in the skyline
+block(4,4,-23,2.6,8,2.6,plasterLight);const towerRoof=new THREE.Mesh(new THREE.ConeGeometry(2.15,3,4),roofTile);towerRoof.position.set(4,9.5,-23);towerRoof.rotation.y=Math.PI/4;towerRoof.castShadow=true;scene.add(towerRoof);
+for(const y of [4.6,6.1])block(4,y,-21.67,.45,.9,.12,windowMat);
+// Timber fence and a neat stack of logs
+for(let i=0;i<10;i++){const x=-26+i*1.15;block(x,1.05,-2,.12,2.1,.12,timber);block(x,1.8,-2,1.25,.14,.14,wood);block(x,.75,-2,1.25,.14,.14,wood)}
+for(let i=0;i<7;i++)block(-24,.3+i*.43,8+i*.08,5,.34,.34,wood);
+// Laundry line and flowered trellises
+block(10,6,1,13,.045,.045,timber);for(let i=0;i<3;i++){const cloth=block(8+i*2.6,5.35,1,2.2,1.25,.08,i%2?clothOrange:plasterLight);cloth.rotation.y=.08}
+for(const [x,z] of [[10,-8],[12,-7],[16,-6],[-14,9],[20,7]]){for(let i=0;i<4;i++){const stem=block(x,1+i*.55,z,.09,.8,.09,leafMat);stem.rotation.z=i%2?.3:-.3}for(let i=0;i<7;i++){const f=new THREE.Mesh(new THREE.SphereGeometry(.12,7,6),flowerMat);f.position.set(x+(Math.random()-.5)*1.3,1+Math.random()*2,z+(Math.random()-.5)*.5);scene.add(f)}}
+for(const [x,z,s] of [[-9,-2,2.2],[8,-3,2.4],[-4,10,2.5],[12,11,2.2],[1,-15,1.8]]){block(x,s*.32,z,s,s*.64,s,wood);block(x,s*.64,z,s+.08,.12,s+.08,timber)}
+
 const player={pos:new THREE.Vector3(0,1.7,12),vel:new THREE.Vector3(),yaw:0,pitch:0,onGround:true};camera.position.copy(player.pos);scene.add(camera);
 let active=false,health=100,cash=3000,scoreA=0,scoreB=0,round=1,ammo=20,mag=20,weapon='Glock',fireRate=0,lastShot=0,reloading=false,fireHeld=false;
 const particles=[];const tracers=[];let hitmarkerTimer=0;
@@ -129,9 +170,9 @@ function reload(){if(!active||reloading||weapon==='Knife'||ammo===mag)return;rel
 function shoot(){if(!active||$('shop').style.display==='grid'||(!document.pointerLockElement&&matchMedia('(pointer:fine)').matches))return;const now=performance.now();if(now-lastShot<currentWeapon.rate||reloading)return;lastShot=now;const origin=camera.position.clone();raycaster.setFromCamera(new THREE.Vector2(0,0),camera);raycaster.far=weapon==='Knife'?2.4:65;const hits=raycaster.intersectObjects(scene.children,true).filter(h=>h.object!==floor&&h.object!==weaponModel&&!weaponModel.children.includes(h.object));const hit=hits[0];let end=origin.clone().add(raycaster.ray.direction.clone().multiplyScalar(raycaster.far));if(hit)end.copy(hit.point);if(weapon==='Knife'){if(hit){const t=targets.find(o=>hit.object===o||o.children.includes(hit.object));if(t&&t.userData.alive){damageTarget(t,45,hit.point);}}return}if(ammo<=0){toast('Press R to reload');return}ammo--;updateHud();addTracer(origin.clone().add(new THREE.Vector3(.18,-.15,0)),end);flashMuzzle();if(hit){const t=targets.find(t=>t.userData.alive&&(hit.object===t||t.children.includes(hit.object)));if(t){damageTarget(t,currentWeapon.damage*(hit.object===t.userData.head?1.5:1),hit.point)}else{burst(hit.point,0xffd28a,5)}}}
 function damageTarget(t,d,point){if(!t.userData.alive||t.userData.falling)return;t.userData.hp-=d;t.userData.hitFlash=.12;if(point)burst(point,0xff493d,10);$('hitmarker').classList.add('show');hitmarkerTimer=.12;if(t.userData.hp<=0){t.userData.alive=false;t.userData.falling=true;t.userData.fallTime=0;t.userData.fallDir=(Math.random()>.5?1:-1);scoreA++;cash+=300;updateHud();toast('Target down +$300')}else toast('HIT')}
 function tickTargets(dt){for(const t of targets){if(t.userData.falling){t.userData.fallTime+=dt;t.rotation.z=THREE.MathUtils.lerp(t.rotation.z,t.userData.fallDir*1.48,Math.min(1,dt*5));t.position.y=Math.max(-.1,t.position.y-dt*1.3);if(t.userData.fallTime>2.4){t.rotation.set(0,0,0);t.position.set(t.userData.spawnX,0,t.userData.spawnZ);t.userData.hp=100;t.userData.alive=true;t.userData.falling=false;t.userData.fallTime=0}}}}
-let muzzleUntil=0;function flashMuzzle(){muzzleUntil=performance.now()+70}
+let muzzleUntil=0;function flashMuzzle(){muzzleUntil=performance.now()+70;muzzleFlash.visible=true;setTimeout(()=>muzzleFlash.visible=false,65)}
 const weaponModel=new THREE.Group();camera.add(weaponModel);
-const gunBody=new THREE.Mesh(new THREE.BoxGeometry(.18,.16,.52),dark);gunBody.position.set(.32,-.28,-.55);weaponModel.add(gunBody);const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.035,.035,.32,8),mat(0x7f8a8f,.3,.7));barrel.rotation.x=Math.PI/2;barrel.position.set(.32,-.24,-.91);weaponModel.add(barrel);const grip=new THREE.Mesh(new THREE.BoxGeometry(.12,.23,.15),mat(0x333a3e));grip.position.set(.32,-.43,-.43);grip.rotation.x=-.2;weaponModel.add(grip);
+const gunBody=new THREE.Mesh(new THREE.BoxGeometry(.22,.19,.68),mat(0x252b2c,.34,.65));gunBody.position.set(.34,-.3,-.57);weaponModel.add(gunBody);const receiver=new THREE.Mesh(new THREE.BoxGeometry(.25,.15,.38),mat(0x42494a,.38,.55));receiver.position.set(.34,-.22,-.52);weaponModel.add(receiver);const barrel=new THREE.Mesh(new THREE.CylinderGeometry(.045,.05,.48,10),mat(0x727978,.28,.8));barrel.rotation.x=Math.PI/2;barrel.position.set(.34,-.25,-1.02);weaponModel.add(barrel);const muzzle=new THREE.Mesh(new THREE.CylinderGeometry(.055,.055,.08,10),mat(0x14191b,.3,.8));muzzle.rotation.x=Math.PI/2;muzzle.position.set(.34,-.25,-1.27);weaponModel.add(muzzle);const grip=new THREE.Mesh(new THREE.BoxGeometry(.14,.28,.18),mat(0x303536));grip.position.set(.34,-.45,-.43);grip.rotation.x=-.2;weaponModel.add(grip);const stock=new THREE.Mesh(new THREE.BoxGeometry(.2,.18,.28),mat(0x443d35));stock.position.set(.34,-.28,-.18);weaponModel.add(stock);const sleeve=new THREE.Mesh(new THREE.BoxGeometry(.28,.36,.38),mat(0x7d2924));sleeve.position.set(.13,-.47,-.34);sleeve.rotation.z=-.3;weaponModel.add(sleeve);const hand=new THREE.Mesh(new THREE.BoxGeometry(.16,.12,.23),mat(0xb98c6a));hand.position.set(.28,-.35,-.48);weaponModel.add(hand);const muzzleFlash=new THREE.Mesh(new THREE.ConeGeometry(.13,.36,8),new THREE.MeshBasicMaterial({color:0xffc65a}));muzzleFlash.rotation.x=-Math.PI/2;muzzleFlash.position.set(.34,-.25,-1.48);muzzleFlash.visible=false;weaponModel.add(muzzleFlash);
 function collidesAt(x,z){const r=.42;return colliders.some(b=>x+r>b.minX&&x-r<b.maxX&&z+r>b.minZ&&z-r<b.maxZ)}
 function move(dt){if(!active)return;const forward=new THREE.Vector3(-Math.sin(player.yaw),0,-Math.cos(player.yaw));const right=new THREE.Vector3(Math.cos(player.yaw),0,-Math.sin(player.yaw));const dir=new THREE.Vector3();if(keys.KeyW||keys.ArrowUp)dir.add(forward);if(keys.KeyS||keys.ArrowDown)dir.sub(forward);if(keys.KeyD||keys.ArrowRight)dir.add(right);if(keys.KeyA||keys.ArrowLeft)dir.sub(right);dir.addScaledVector(forward,-touchY);dir.addScaledVector(right,touchX);if(dir.lengthSq()>1)dir.normalize();const dx=dir.x*dt*5.4,dz=dir.z*dt*5.4;const nx=THREE.MathUtils.clamp(player.pos.x+dx,-28,28);if(!collidesAt(nx,player.pos.z))player.pos.x=nx;const nz=THREE.MathUtils.clamp(player.pos.z+dz,-23,23);if(!collidesAt(player.pos.x,nz))player.pos.z=nz;velocityY-=19*dt;player.pos.y+=velocityY*dt;if(player.pos.y<1.7){player.pos.y=1.7;velocityY=0;player.onGround=true}camera.position.copy(player.pos);camera.rotation.order='YXZ';camera.rotation.y=player.yaw;camera.rotation.x=player.pitch;weaponModel.visible=weapon!=='Knife';}
 let touchX=0,touchY=0,stickPointer=null,lookPointer=null,lastLookX=0,lastLookY=0;
